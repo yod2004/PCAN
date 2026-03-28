@@ -220,7 +220,7 @@
             let html = `<td class="col-id">${idStr}</td><td class="col-dlc">${dlc}</td>`;
             
             // Data0〜7のセルを作成（空でも8個作る）
-            for (int i = 0; i < 8; i++) {
+            for (let i = 0; i < 8; i++) {
                 const byteStr = dataBytes[i] || "--"; // データがなければ "--"
                 html += `<td class="col-data col-data-${i}">${byteStr}</td>`;
             }
