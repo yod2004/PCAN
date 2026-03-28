@@ -1,0 +1,16 @@
+C:\Users\ohori\source\repos\WpfApp1_20260326\WpfApp1_20260326\bin\Debug\WpfApp1_20260326.exe.config
+C:\Users\ohori\source\repos\WpfApp1_20260326\WpfApp1_20260326\bin\Debug\WpfApp1_20260326.exe
+C:\Users\ohori\source\repos\WpfApp1_20260326\WpfApp1_20260326\bin\Debug\WpfApp1_20260326.pdb
+C:\Users\ohori\source\repos\WpfApp1_20260326\WpfApp1_20260326\obj\Debug\WpfApp1_20260326.csproj.AssemblyReference.cache
+C:\Users\ohori\source\repos\WpfApp1_20260326\WpfApp1_20260326\obj\Debug\MainWindow.g.cs
+C:\Users\ohori\source\repos\WpfApp1_20260326\WpfApp1_20260326\obj\Debug\App.g.cs
+C:\Users\ohori\source\repos\WpfApp1_20260326\WpfApp1_20260326\obj\Debug\WpfApp1_20260326_MarkupCompile.cache
+C:\Users\ohori\source\repos\WpfApp1_20260326\WpfApp1_20260326\obj\Debug\WpfApp1_20260326_MarkupCompile.lref
+C:\Users\ohori\source\repos\WpfApp1_20260326\WpfApp1_20260326\obj\Debug\MainWindow.baml
+C:\Users\ohori\source\repos\WpfApp1_20260326\WpfApp1_20260326\obj\Debug\WpfApp1_20260326.g.resources
+C:\Users\ohori\source\repos\WpfApp1_20260326\WpfApp1_20260326\obj\Debug\WpfApp1_20260326.Properties.Resources.resources
+C:\Users\ohori\source\repos\WpfApp1_20260326\WpfApp1_20260326\obj\Debug\WpfApp1_20260326.csproj.GenerateResource.cache
+C:\Users\ohori\source\repos\WpfApp1_20260326\WpfApp1_20260326\obj\Debug\WpfApp1_20260326.csproj.CoreCompileInputs.cache
+C:\Users\ohori\source\repos\WpfApp1_20260326\WpfApp1_20260326\obj\Debug\WpfApp1_20260326.exe
+C:\Users\ohori\source\repos\WpfApp1_20260326\WpfApp1_20260326\obj\Debug\WpfApp1_20260326.pdb
+C:\Users\ohori\source\repos\WpfApp1_20260326\WpfApp1_20260326\obj\Debug\GeneratedInternalTypeHelper.g.cs

@@ -1,0 +1,195 @@
+﻿<Window x:Class="PCAN.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:PCAN"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="200" Width="400">
+    <Window.Resources>
+        <local:HexToIntConverter x:Key="HexConverter"/>
+    </Window.Resources>
+    <Grid>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Button Content="🔗" Command="{Binding ConnectComCommand}" Grid.Column="0"/>
+                <ComboBox Width="Auto" ItemsSource="{Binding AvailablePorts}" SelectedItem="{Binding SelectedPort}" Grid.Column="1"/>
+                <Button Content="↺" Command="{Binding ReloadComCommand}" Grid.Column="2"/>
+            </Grid>
+            <Grid Grid.Row="1">
+                <TabControl>
+                    <TabItem Header="TX">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid Grid.Row="0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid Grid.Column="0">
+                                    <ComboBox Margin="0,0,5,0" SelectedIndex="{Binding TxBpsIndex}">
+                                        <ComboBoxItem Content="1M"/>
+                                        <ComboBoxItem Content="500k"/>
+                                    </ComboBox>
+                                </Grid>
+                                <TextBlock Text="bps" Grid.Column="1"/>
+                            </Grid>
+                            <Grid Grid.Row="1">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <RadioButton Content="Standard" Grid.Column="0" Margin="0,0,10,0" IsChecked="{Binding IsTxStandardId}"/>
+                                <RadioButton Content="Extended" Grid.Column="1"/>
+                            </Grid>
+                            <Grid Grid.Row="2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="ID : "/>
+                                <TextBox Text="{Binding TxId, Converter={StaticResource HexConverter}}" Grid.Column="1"/>
+                            </Grid>
+                            <Grid Grid.Row="3">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Text="0" Grid.Column="0" Background="Gray"/>
+                                <TextBox Text="1" Grid.Column="2" Background="Gray"/>
+                                <TextBox Text="2" Grid.Column="4" Background="Gray"/>
+                                <TextBox Text="3" Grid.Column="6" Background="Gray"/>
+                                <TextBox Text="4" Grid.Column="8" Background="Gray"/>
+                                <TextBox Text="5" Grid.Column="10" Background="Gray"/>
+                                <TextBox Text="6" Grid.Column="12" Background="Gray"/>
+                                <TextBox Text="7" Grid.Column="14" Background="Gray"/>
+                                <TextBox Text="{Binding TxData0, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource HexConverter}}" Grid.Column="1"/>
+                                <TextBox Text="{Binding TxData1, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource HexConverter}}" Grid.Column="3"/>
+                                <TextBox Text="{Binding TxData2, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource HexConverter}}" Grid.Column="5"/>
+                                <TextBox Text="{Binding TxData3, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource HexConverter}}" Grid.Column="7"/>
+                                <TextBox Text="{Binding TxData4, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource HexConverter}}" Grid.Column="9"/>
+                                <TextBox Text="{Binding TxData5, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource HexConverter}}" Grid.Column="11"/>
+                                <TextBox Text="{Binding TxData6, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource HexConverter}}" Grid.Column="13"/>
+                                <TextBox Text="{Binding TxData7, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource HexConverter}}" Grid.Column="15"/>
+                            </Grid>
+                            <Button Content="Send" Command="{Binding TxPushButtonCommand}" Grid.Row="4"/>
+                            <Grid Grid.Row="5">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text=" FreeLevel " Grid.Column="0" Background="Gray"/>
+                                <TextBlock Text="{Binding TxFreeLevel}" Grid.Column="1"/>
+                                <TextBlock Text=" ACK " Grid.Column="2" Background="Gray"/>
+                                <TextBlock Text="{Binding TxAck}" Grid.Column="3"/>
+                            </Grid>
+                        </Grid>
+                    </TabItem>
+                    <TabItem Header="RX">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <Grid Grid.Row="0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid Grid.Column="0">
+                                    <ComboBox Margin="0,0,5,0" SelectedIndex="{Binding RxBpsIndex}">
+                                        <ComboBoxItem Content="1M"/>
+                                        <ComboBoxItem Content="500k"/>
+                                    </ComboBox>
+                                </Grid>
+                                <TextBlock Text="bps" Grid.Column="1"/>
+                            </Grid>
+                            <Grid Grid.Row="1">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <RadioButton Content="Standard" Grid.Column="0" Margin="0,0,10,0" IsChecked="{Binding IsRxStandardId}"/>
+                                <RadioButton Content="Extended" Grid.Column="1"/>
+                            </Grid>
+                            <Grid Grid.Row="2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Filter ID" Background="Gray" VerticalAlignment="Center" Grid.Column="0"/>
+                                <TextBox Text="{Binding RxFilterId, Converter={StaticResource HexConverter}}" VerticalAlignment="Center" Grid.Column="1"/>
+                                <TextBlock Text="Mask ID" Background="Gray" VerticalAlignment="Center" Grid.Column="2"/>
+                                <TextBox Text="{Binding RxMaskId, Converter={StaticResource HexConverter}}" VerticalAlignment="Center" Grid.Column="3"/>
+                            </Grid>
+                            <DataGrid x:Name="RxDataGrid" ItemsSource="{Binding RxDataList}" IsReadOnly="True" AutoGenerateColumns="False" Grid.Row="3">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Binding="{Binding Id, Converter={StaticResource HexConverter}}"    Header="ID" Width="*"/>
+                                    <DataGridTextColumn Binding="{Binding Data0, Converter={StaticResource HexConverter}}" Header="0" Width="*"/>
+                                    <DataGridTextColumn Binding="{Binding Data1, Converter={StaticResource HexConverter}}" Header="1" Width="*"/>
+                                    <DataGridTextColumn Binding="{Binding Data2, Converter={StaticResource HexConverter}}" Header="2" Width="*"/>
+                                    <DataGridTextColumn Binding="{Binding Data3, Converter={StaticResource HexConverter}}" Header="3" Width="*"/>
+                                    <DataGridTextColumn Binding="{Binding Data4, Converter={StaticResource HexConverter}}" Header="4" Width="*"/>
+                                    <DataGridTextColumn Binding="{Binding Data5, Converter={StaticResource HexConverter}}" Header="5" Width="*"/>
+                                    <DataGridTextColumn Binding="{Binding Data6, Converter={StaticResource HexConverter}}" Header="6" Width="*"/>
+                                    <DataGridTextColumn Binding="{Binding Data7, Converter={StaticResource HexConverter}}" Header="7" Width="*"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                            <Grid Grid.Row="4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Frequency" Background="Gray" Grid.Column="0"/>
+                                <TextBlock Text="{Binding RxFrequency}" Grid.Column="1"/>
+                                <TextBlock Text="Hz" Grid.Column="2"/>
+                            </Grid>
+                        </Grid>
+                    </TabItem>
+                </TabControl>
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>
