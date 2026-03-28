@@ -1,9 +1,0 @@
-../Core/Src/main.c:75:6:HAL_CAN_RxFifo0MsgPendingCallback	56	static
-../Core/Src/main.c:96:6:HAL_UART_RxCpltCallback	16	static
-../Core/Src/main.c:112:10:parseHex	32	static
-../Core/Src/main.c:135:5:main	104	static
-../Core/Src/main.c:257:6:SystemClock_Config	72	static
-../Core/Src/main.c:294:13:MX_CAN_Init	8	static
-../Core/Src/main.c:331:13:MX_USART2_UART_Init	8	static
-../Core/Src/main.c:366:13:MX_GPIO_Init	16	static
-../Core/Src/main.c:389:6:Error_Handler	4	static,ignoring_inline_asm

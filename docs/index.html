@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web CAN Tool</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        #log { background: #eee; padding: 10px; height: 300px; overflow-y: scroll; font-family: monospace; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <h2>Web CAN Tool (slcan)</h2>
+    
+    <button id="connectBtn">🔗 Connect COM</button>
+    <br><br>
+    <div id="log">ここにデータが表示されます...</div>
+
+    <script>
+        let port;
+        let reader;
+        let receiveBuffer = ""; // 届いた文字を一時的に貯める箱
+
+        const connectBtn = document.getElementById('connectBtn');
+        const logDiv = document.getElementById('log');
+
+        // Connectボタンが押されたときの処理
+        connectBtn.addEventListener('click', async () => {
+            try {
+                // 1. ブラウザのポップアップを出して、ユーザーにCOMポートを選ばせる
+                port = await navigator.serial.requestPort();
+                
+                // 2. ポートを開く (BaudRate: 115200)
+                await port.open({ baudRate: 115200 });
+                logDiv.innerHTML += "<div>[System] ポートを開きました！</div>";
+                connectBtn.disabled = true;
+
+                // 3. データの受信ループを開始
+                readUntilClosed();
+            } catch (error) {
+                console.error("接続エラー:", error);
+                logDiv.innerHTML += `<div style="color:red;">[Error] ${error.message}</div>`;
+            }
+        });
+
+        // 常にデータを受信し続ける処理
+        async function readUntilClosed() {
+            // 文字列として読み込むためのデコーダー（バイト配列 -> 文字）
+            const textDecoder = new TextDecoderStream();
+            const readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
+            reader = textDecoder.readable.getReader();
+
+            try {
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break; // ポートが閉じられたら終了
+                    
+                    if (value) {
+                        receiveBuffer += value; // 届いた文字をバッファに足す
+                        
+                        // '\r' (キャリッジリターン) が含まれているかチェック
+                        let lines = receiveBuffer.split('\r');
+                        
+                        // 最後の要素はまだ完了していない途中のデータなのでバッファに残す
+                        receiveBuffer = lines.pop(); 
+
+                        // '\r' で区切られた完全な1行分（コマンド）を処理する
+                        for (let line of lines) {
+                            if (line.trim() !== "") {
+                                parseSlcan(line.trim());
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error("読み取りエラー:", error);
+            } finally {
+                reader.releaseLock();
+            }
+        }
+
+        // slcan文字列を解読して画面に表示する処理
+        function parseSlcan(rawData) {
+            // 例: "t12381122334455667788" などを解読する
+            if (rawData.length < 5) return;
+
+            const type = rawData[0];
+            const isStandard = (type === 't');
+            const idLength = isStandard ? 3 : 8;
+
+            const idStr = rawData.substring(1, 1 + idLength);
+            const dlcStr = rawData.substring(1 + idLength, 1 + idLength + 1);
+            const dlc = parseInt(dlcStr, 16);
+
+            const dataStr = rawData.substring(1 + idLength + 1);
+
+            // 画面に追記する
+            const displayStr = `ID: 0x${idStr} | DLC: ${dlc} | Data: ${dataStr}`;
+            
+            const newLog = document.createElement("div");
+            newLog.textContent = displayStr;
+            logDiv.appendChild(newLog);
+
+            // 最新のデータが見えるように一番下へスクロール
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+    </script>
+</body>
+</html>
