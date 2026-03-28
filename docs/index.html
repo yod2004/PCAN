@@ -12,9 +12,41 @@
 </head>
 <body>
 
-    <h2>Web CAN Tool (slcan)</h2>
+    <h2>PCAN web</h2>
     
     <button id="connectBtn">🔗 Connect COM</button>
+    <div style="margin-top: 20px; padding:10px; background: #ddd;">
+        <h3>CAN TX</h3>
+        <div style="margin-bottom: 10px;">
+            CAN ID : <input type="text" id="txIdInput" class="hex-input" value="0x123" size="6" maxlength="5">
+        </div>
+        
+        データ:
+        <table style="text-align: center; border-collapse: collapse;">
+            <tr>
+                <td style="background: #ccc; width: 45px;">0</td>
+                <td style="background: #ccc; width: 45px;">1</td>
+                <td style="background: #ccc; width: 45px;">2</td>
+                <td style="background: #ccc; width: 45px;">3</td>
+                <td style="background: #ccc; width: 45px;">4</td>
+                <td style="background: #ccc; width: 45px;">5</td>
+                <td style="background: #ccc; width: 45px;">6</td>
+                <td style="background: #ccc; width: 45px;">7</td>
+            </tr>
+            <tr>
+                <td><input type="text" id="txData0" class="hex-input" size="4" maxlength="4" value="0x00"></td>
+                <td><input type="text" id="txData1" class="hex-input" size="4" maxlength="4" value="0x00"></td>
+                <td><input type="text" id="txData2" class="hex-input" size="4" maxlength="4" value="0x00"></td>
+                <td><input type="text" id="txData3" class="hex-input" size="4" maxlength="4" value="0x00"></td>
+                <td><input type="text" id="txData4" class="hex-input" size="4" maxlength="4" value="0x00"></td>
+                <td><input type="text" id="txData5" class="hex-input" size="4" maxlength="4" value="0x00"></td>
+                <td><input type="text" id="txData6" class="hex-input" size="4" maxlength="4" value="0x00"></td>
+                <td><input type="text" id="txData7" class="hex-input" size="4" maxlength="4" value="0x00"></td>
+            </tr>
+        </table>
+        <br>
+        <button id="sendBtn">📤 送信</button>
+    </div>
     <br><br>
     <div id="log">ここにデータが表示されます...</div>
 
@@ -25,6 +57,9 @@
 
         const connectBtn = document.getElementById('connectBtn');
         const logDiv = document.getElementById('log');
+        const txIdInput = document.getElementById('txIdInput');
+        const txDataInput = document.getElementById('txDataInput');
+        const sendBtn = document.getElementById('sendBtn');
 
         // Connectボタンが押されたときの処理
         connectBtn.addEventListener('click', async () => {
@@ -43,6 +78,92 @@
                 console.error("接続エラー:", error);
                 logDiv.innerHTML += `<div style="color:red;">[Error] ${error.message}</div>`;
             }
+        });
+
+        // 📤 送信ボタンがクリックされた時の処理 (ConvertBack に相当)
+        sendBtn.addEventListener('click', async () => {
+            // .replace(/0x/gi, '') で、大文字小文字問わず 0x を剥ぎ取る！
+            const idText = txIdInput.value.replace(/0x/gi, '').trim();
+
+            let dataText = "";
+            for (let i = 0; i < 8; i++) {
+                // 各データの 0x も剥ぎ取る
+                let val = document.getElementById(`txData${i}`).value.replace(/0x/gi, '').trim();
+                
+                if (val !== "") {
+                    dataText += val.padStart(2, '0');
+                } else {
+                    break; 
+                }
+            }
+
+            // IDとデータが空なら何もしない
+            if (idText === "") return;
+
+            const dlc = Math.floor(dataText.length / 2);
+            const paddedId = idText.padStart(3, '0');
+            const slcanString = `t${paddedId}${dlc}${dataText}\r`;
+
+            const div = document.createElement("div");
+            div.style.color = "blue";
+            div.textContent = `[Tx] 送信: ${slcanString}`;
+            logDiv.appendChild(div);
+            logDiv.scrollTop = logDiv.scrollHeight;
+
+            if (port && port.writable) {
+                const encoder = new TextEncoder();
+                const writer = port.writable.getWriter();
+                await writer.write(encoder.encode(slcanString));
+                writer.releaseLock();
+            } else {
+                alert("COMポートが繋がっていません！");
+            }
+        });
+
+        // 💡 WPFの Convert に相当する処理（自動フォーマット）
+        // class="hex-input" が付いている全ての入力欄を捕まえる
+        const hexInputs = document.querySelectorAll('.hex-input');
+        
+        hexInputs.forEach(input => {
+            
+            // 💡追加：文字が入力された瞬間に発動するガード処理
+            input.addEventListener('input', (e) => {
+                // 「0〜9」「A〜F」「a〜f」「x」「X」"以外"の文字が入力されたら、空っぽ('')に置き換えて消し去る！
+                e.target.value = e.target.value.replace(/[^0-9A-Fa-fxX]/g, '');
+            });
+
+            // --- (以下はそのまま残します) ---
+            
+            // 入力欄からフォーカスが外れた時（blur）に発動
+        input.addEventListener('blur', (e) => {
+            let val = e.target.value.replace(/0x/gi, '').trim();
+            
+            // 空っぽなら 0 にする
+            if (val === "") {
+                val = "0";
+            }
+
+            // 💡追加：文字を「16進数の数値」として解釈する
+            let num = parseInt(val, 16);
+            if (isNaN(num)) num = 0; // 万が一数値じゃなかったら0にするフェイルセーフ
+
+            if (e.target.id === 'txIdInput') {
+                // ID欄：標準IDの最大値は 0x7FF (10進数で2047)
+                if (num > 0x7FF) num = 0x7FF;
+                // 数値を16進数の文字に戻して 0x を付ける
+                e.target.value = "0x" + num.toString(16).padStart(3, '0').toUpperCase();
+            } else {
+                // データ欄：1バイトの最大値は 0xFF (10進数で255)
+                if (num > 0xFF) num = 0xFF;
+                // 数値を16進数の文字に戻して 0x を付ける
+                e.target.value = "0x" + num.toString(16).padStart(2, '0').toUpperCase();
+            }
+        });
+
+            // クリックした時に全選択状態にする
+            input.addEventListener('focus', (e) => {
+                e.target.select();
+            });
         });
 
         // 常にデータを受信し続ける処理
