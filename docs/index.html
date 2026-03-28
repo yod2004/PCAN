@@ -3,298 +3,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web CAN Tool (slcan)</title>
+    <title>PCAN web</title>
     <style>
-        /* 💡カッコいい見た目（CSS）の設定 */
-        :root {
-            --bg-color: #1e1e1e; /* ダークグレー */
-            --text-color: #d4d4d4; /* 薄いグレー */
-            --accent-color: #007acc; /* VS Codeっぽい青 */
-            --highlight-color: #264f78; /* 更新時のハイライト青 */
-            --border-color: #3e3e42;
-            --panel-bg: #252526;
-        }
-
-        body {
-            font-family: 'Consolas', 'Monaco', monospace; /* エンジニアっぽいフォント */
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            box-sizing: border-box;
-        }
-
-        /* ヘッダー・接続エリア */
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-bottom: 20px;
-            border-bottom: 1px solid var(--border-color);
-            margin-bottom: 20px;
-        }
-
-        h2 { margin: 0; color: #fff; }
-
-        button {
-            padding: 10px 20px;
-            font-size: 14px;
-            background-color: var(--accent-color);
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        button:hover { background-color: #1a8ad4; }
-        button:disabled { background-color: #555; cursor: not-allowed; }
-
-        /* 受信テーブルエリア（WPFのDataGridに相当） */
-        #rxContainer {
-            flex-grow: 1; /* 余ったスペースを全部使う（WPFの Height="*" ） */
-            background-color: var(--panel-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            overflow-y: auto; /* 中身がいっぱいになったらスクロール */
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-        }
-
-        /* テーブルヘッダー固定（WPFっぽい動き） */
-        thead th {
-            position: sticky;
-            top: 0;
-            background-color: #333;
-            color: #fff;
-            padding: 10px;
-            text-align: left;
-            border-bottom: 2px solid var(--border-color);
-            z-index: 1;
-        }
-
-        tbody td {
-            padding: 8px 10px;
-            border-bottom: 1px solid var(--border-color);
-            white-space: nowrap;
-        }
-
-        /* 列の幅設定 */
-        .col-id { width: 80px; color: #dcdcaa; } /* IDは薄黄色 */
-        .col-dlc { width: 50px; text-align: center; }
-        .col-data { width: 40px; text-align: center; color: #ce9178; } /* データは薄オレンジ */
-        .col-hz { width: 60px; text-align: right; color: #4ec9b0; } /* Hzは薄緑 */
-        .col-time { width: 100px; color: #888; }
-
-        /* 縞々（偶数行の色を変える） */
-        tbody tr:nth-child(even) { background-color: #2a2a2a; }
-        
-        /* ホバー効果 */
-        tbody tr:hover { background-color: #333; }
-
-        /* 💡アニメーション：更新された時に青く光る */
-        @keyframes highlightCell {
-            from { background-color: var(--highlight-color); }
-            to { background-color: transparent; }
-        }
-
-        .updated {
-            animation: highlightCell 0.5s ease-out;
-        }
+        body { font-family: sans-serif; padding: 20px; }
+        #log { background: #eee; padding: 10px; height: 300px; overflow-y: scroll; font-family: monospace; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <header>
-        <h2>Web CAN Tool (slcan)</h2>
-        <button id="connectBtn">🔗 Connect COM</button>
-    </header>
+    <h2>Web CAN Tool (slcan)</h2>
     
-    <div id="rxContainer">
-        <table id="rxTable">
-            <thead>
-                <tr>
-                    <th class="col-id">ID</th>
-                    <th class="col-dlc">DLC</th>
-                    <th class="col-data">0</th><th class="col-data">1</th><th class="col-data">2</th><th class="col-data">3</th>
-                    <th class="col-data">4</th><th class="col-data">5</th><th class="col-data">6</th><th class="col-data">7</th>
-                    <th class="col-hz">Hz</th>
-                    <th class="col-time">Last Time</th>
-                </tr>
-            </thead>
-            <tbody id="rxBody">
-                </tbody>
-        </table>
-    </div>
+    <button id="connectBtn">🔗 Connect COM</button>
+    <br><br>
+    <div id="log">ここにデータが表示されます...</div>
 
     <script>
-        let port, reader;
-        let receiveBuffer = "";
-        
-        // 💡WPFの「上書き更新・Hz計算」ロジックをJSで実装
-        let canRows = {}; // IDをキーにして、行の情報を保存する箱
+        let port;
+        let reader;
+        let receiveBuffer = ""; // 届いた文字を一時的に貯める箱
 
         const connectBtn = document.getElementById('connectBtn');
-        const rxBody = document.getElementById('rxBody');
+        const logDiv = document.getElementById('log');
 
+        // Connectボタンが押されたときの処理
         connectBtn.addEventListener('click', async () => {
             try {
+                // 1. ブラウザのポップアップを出して、ユーザーにCOMポートを選ばせる
                 port = await navigator.serial.requestPort();
-                await port.open({ baudRate: 115200 });
-                connectBtn.textContent = "✅ Connected";
-                connectBtn.disabled = true;
-                readUntilClosed();
                 
-                // 1秒ごとに全行のHz（周波数）を再計算して更新するタイマーを開始
-                setInterval(updateAllHz, 1000);
+                // 2. ポートを開く (BaudRate: 115200)
+                await port.open({ baudRate: 115200 });
+                logDiv.innerHTML += "<div>[System] ポートを開きました！</div>";
+                connectBtn.disabled = true;
+
+                // 3. データの受信ループを開始
+                readUntilClosed();
             } catch (error) {
                 console.error("接続エラー:", error);
-                alert("接続に失敗しました: " + error.message);
+                logDiv.innerHTML += `<div style="color:red;">[Error] ${error.message}</div>`;
             }
         });
 
+        // 常にデータを受信し続ける処理
         async function readUntilClosed() {
+            // 文字列として読み込むためのデコーダー（バイト配列 -> 文字）
             const textDecoder = new TextDecoderStream();
-            port.readable.pipeTo(textDecoder.writable);
+            const readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
             reader = textDecoder.readable.getReader();
 
             try {
                 while (true) {
                     const { value, done } = await reader.read();
-                    if (done) break;
+                    if (done) break; // ポートが閉じられたら終了
+                    
                     if (value) {
-                        receiveBuffer += value;
+                        receiveBuffer += value; // 届いた文字をバッファに足す
+                        
+                        // '\r' (キャリッジリターン) が含まれているかチェック
                         let lines = receiveBuffer.split('\r');
+                        
+                        // 最後の要素はまだ完了していない途中のデータなのでバッファに残す
                         receiveBuffer = lines.pop(); 
+
+                        // '\r' で区切られた完全な1行分（コマンド）を処理する
                         for (let line of lines) {
                             if (line.trim() !== "") {
-                                parseAndStoreSlcan(line.trim());
+                                parseSlcan(line.trim());
                             }
                         }
                     }
                 }
-            } catch (error) {} finally { reader.releaseLock(); }
+            } catch (error) {
+                console.error("読み取りエラー:", error);
+            } finally {
+                reader.releaseLock();
+            }
         }
 
-        // slcan文字列を解読して、「上書き」か「新規追加」を行う処理
-        function parseAndStoreSlcan(rawData) {
+        // slcan文字列を解読して画面に表示する処理
+        function parseSlcan(rawData) {
+            // 例: "t12381122334455667788" などを解読する
             if (rawData.length < 5) return;
 
             const type = rawData[0];
-            if (type !== 't' && type !== 'T') return; // tかT以外は無視
-
             const isStandard = (type === 't');
             const idLength = isStandard ? 3 : 8;
 
-            const idStr = "0x" + rawData.substring(1, 1 + idLength); // WPFっぽく 0x を付ける
+            const idStr = rawData.substring(1, 1 + idLength);
             const dlcStr = rawData.substring(1 + idLength, 1 + idLength + 1);
             const dlc = parseInt(dlcStr, 16);
 
             const dataStr = rawData.substring(1 + idLength + 1);
-            // 2文字ずつ区切って配列にする（例: "1122..." -> ["11", "22", ...]）
-            const dataBytes = dataStr.match(/.{1,2}/g) || [];
 
-            const now = new Date(); // 受信時間
-
-            // 💡WPFのDataGridの動きを再現：IDですでに行があるかチェック
-            if (canRows[idStr]) {
-                // 【上書き更新】すでにある行のデータを書き換える（フリーズしない秘密）
-                updateRow(canRows[idStr], dlc, dataBytes, now);
-            } else {
-                // 【新規追加】新しいIDが来たら、新しい行を作成する
-                createNewRow(idStr, dlc, dataBytes, now);
-            }
-        }
-
-        // 新しい行をテーブルに追加する処理
-        function createNewRow(idStr, dlc, dataBytes, time) {
-            const tr = document.createElement('tr');
+            // 画面に追記する
+            const displayStr = `ID: 0x${idStr} | DLC: ${dlc} | Data: ${dataStr}`;
             
-            // 各セル（td）を作成して、IDなどをセット
-            let html = `<td class="col-id">${idStr}</td><td class="col-dlc">${dlc}</td>`;
-            
-            // Data0〜7のセルを作成（空でも8個作る）
-            for (let i = 0; i < 8; i++) {
-                const byteStr = dataBytes[i] || "--"; // データがなければ "--"
-                html += `<td class="col-data col-data-${i}">${byteStr}</td>`;
-            }
-            
-            html += `<td class="col-hz">0.0</td>`; // Hzの初期値
-            html += `<td class="col-time">${formatTime(time)}</td>`; // 時間
-            
-            tr.innerHTML = html;
-            rxBody.appendChild(tr); // テーブルに追加
+            const newLog = document.createElement("div");
+            newLog.textContent = displayStr;
+            logDiv.appendChild(newLog);
 
-            // 作成した行の情報を箱（canRows）に保存する
-            canRows[idStr] = {
-                element: tr,
-                count: 1, // 受信件数カウンター
-                lastTime: time
-            };
-        }
-
-        // すでにある行のデータを上書き更新する処理
-        function updateRow(rowInfo, dlc, dataBytes, time) {
-            rowInfo.count++; // 受信件数をカウントアップ
-            rowInfo.lastTime = time; // 最終受信時間を更新
-            
-            const tr = rowInfo.element;
-            
-            // DLCを更新
-            tr.cells[1].textContent = dlc;
-
-            // Data0〜7を更新
-            for (let i = 0; i < 8; i++) {
-                const cell = tr.querySelector(`.col-data-${i}`);
-                const oldVal = cell.textContent;
-                const newVal = dataBytes[i] || "--";
-                
-                if (oldVal !== newVal) {
-                    cell.textContent = newVal;
-                    // 💡変更があったセルだけ青く光らせる（視認性UP）
-                    cell.classList.remove('updated');
-                    void cell.offsetWidth; // アニメーションを再トリガーするための魔法
-                    cell.classList.add('updated');
-                }
-            }
-            
-            // 時間を更新
-            tr.cells[11].textContent = formatTime(time);
-        }
-
-        // 1秒ごとに全行のHzを計算して表示を更新する処理
-        function updateAllHz() {
-            const now = new Date();
-            for (let id in canRows) {
-                const rowInfo = canRows[id];
-                
-                // Hz = 受信件数 / 1秒
-                // 今回は単純に1秒間の件数を表示
-                rowInfo.element.cells[10].textContent = rowInfo.count.toFixed(1);
-                
-                // 件数をリセットして、次の1秒に備える
-                rowInfo.count = 0;
-
-                // 3秒以上データが来ていない行は、Hzを0にする
-                if (now - rowInfo.lastTime > 3000) {
-                    rowInfo.element.cells[10].textContent = "0.0";
-                }
-            }
-        }
-
-        // 時間を HH:MM:SS.mmm の形式にする便利関数
-        function formatTime(date) {
-            const h = date.getHours().toString().padStart(2, '0');
-            const m = date.getMinutes().toString().padStart(2, '0');
-            const s = date.getSeconds().toString().padStart(2, '0');
-            const ms = date.getMilliseconds().toString().padStart(3, '0');
-            return `${h}:${m}:${s}.${ms}`;
+            // 最新のデータが見えるように一番下へスクロール
+            logDiv.scrollTop = logDiv.scrollHeight;
         }
     </script>
 </body>
